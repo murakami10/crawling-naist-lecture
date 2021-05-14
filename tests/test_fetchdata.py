@@ -2,8 +2,10 @@ import threading
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 import pytest
+import requests
 
-from src.croning_naist_syllabus.FetchData import FetchData, LectureNameUrl
+from src.croning_naist_syllabus.FetchData import (FetchData, LectureDetail,
+                                                  LectureNameUrl)
 
 
 @pytest.fixture(scope="session")
@@ -79,10 +81,11 @@ def test_get_name_and_url_key_error(start_http_server, fetch_data):
         fetch_data.get_name_and_url("key error")
 
 
-def test_choose_lecture(start_http_server, monkeypatch):
-    def dummy_init(self, url):
-        pass
+def dummy_init(self, url):
+    pass
 
+
+def test_choose_lecture(start_http_server, monkeypatch):
     def dummy_get_name_and_url(self, lecture):
         return [
             LectureNameUrl(
@@ -101,3 +104,15 @@ def test_choose_lecture(start_http_server, monkeypatch):
         LectureNameUrl(name="例", url="http://example.com")
         in fetch_data.name_and_url_of_lectures[FetchData.LECTURE_TYPE_BASIC]
     )
+
+
+def test_get_detail_of_lecture(start_http_server, monkeypatch):
+
+    monkeypatch.setattr(FetchData, "__init__", dummy_init)
+    fetch_data = FetchData("url")
+    detail_url = "http://127.0.0.1:8888/tests/detail_1.html"
+    response: requests.Response = requests.get(detail_url)
+    detail_lecture_data = fetch_data.get_detail_of_lecture(response)
+    assert 1 == detail_lecture_data[0].number
+    assert "4/22 [2]" == detail_lecture_data[0].date
+    assert "スーパスカラとVLIW (日本語教科書８章)" == detail_lecture_data[0].theme
