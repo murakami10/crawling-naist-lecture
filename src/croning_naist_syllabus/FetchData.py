@@ -25,15 +25,15 @@ class FetchData:
         self.response.raise_for_status()
         self.root = lxml.html.fromstring(self.response.content)
 
-    def choose_lecture(self, lectures: list):
+    def scrape_lectures(self, lectures: list):
 
         self.name_and_url_of_lectures = {}
 
         for lecture in lectures:
 
-            self.name_and_url_of_lectures[lecture] = self.get_name_and_url(lecture)
+            self.name_and_url_of_lectures[lecture] = self.scrape_name_and_url(lecture)
 
-    def get_name_and_url(self, lecture):
+    def scrape_name_and_url(self, lecture):
         """
         授業科目の名前とURLを取得
         """
@@ -59,7 +59,26 @@ class FetchData:
 
         return lecture_datas
 
-    def get_detail_of_lecture(self, response: requests.Response):
+    def scrape_details(self, lectures: list):
+
+        self.lectures_details = {}
+        for lecture in lectures:
+            if not isinstance(lecture, LectureNameUrl):
+                continue
+
+            response = requests.get(lecture.url)
+
+            # 無効なurlの際に例外を投げる
+            response.raise_for_status()
+
+            self.lectures_details[lecture.name] = self.scrape_detail_of_lecture(
+                response
+            )
+
+    def scrape_detail_of_lecture(self, response: requests.Response):
+        """
+        授業の詳細な情報を取得
+        """
 
         root = lxml.html.fromstring(response.content)
 
