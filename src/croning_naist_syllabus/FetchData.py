@@ -42,14 +42,9 @@ class FetchData:
         # 例外に気づくためにcatchしない
         index = self.start_index_of_lecture[lecture]
 
-        while True:
-
-            value = self.root.cssselect(
-                f"#contents > table > tbody > tr:nth-child({index}) > td.w20pr"
-            )
-
-            if not value:
-                break
+        while value := self.root.cssselect(
+            f"#contents > table > tbody > tr:nth-child({index}) > td.w20pr"
+        ):
 
             # aタグをのURLを調べ、Noneであれば"not exist"を代入
             url = value[0].find("a")
@@ -67,3 +62,9 @@ class FetchData:
 class LectureNameUrl(NamedTuple):
     name: str
     url: str
+
+
+class LectureDetail(NamedTuple):
+    number: int
+    date: str
+    content: str
