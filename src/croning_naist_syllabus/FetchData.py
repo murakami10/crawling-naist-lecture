@@ -24,6 +24,7 @@ class FetchData:
         # ステータスコードが200番以外なら例外を起こす
         self.response.raise_for_status()
         self.root = lxml.html.fromstring(self.response.content)
+        self.root.make_links_absolute(self.response.url)
 
     def scrape_lectures(self, lectures: list):
 
@@ -37,6 +38,7 @@ class FetchData:
         """
         授業科目の名前とURLを取得
         """
+
         lecture_datas = []
 
         # start_index_of_lectureにないkeyを指定すると例外を投げる
@@ -44,7 +46,7 @@ class FetchData:
         index = self.START_INDEX_OF_LECTURE[lecture]
 
         while value := self.root.cssselect(
-            f"#contents > table > tbody > tr:nth-child({index}) > td.w20pr"
+            f"#contents > table  > tr:nth-child({index}) > td.w20pr"
         ):
 
             # aタグをのURLを調べ、Noneであれば"not exist"を代入
@@ -86,7 +88,7 @@ class FetchData:
         index = 2
 
         while element := root.cssselect(
-            f"#contents > table:nth-child(12) > tbody > tr:nth-child({index})"
+            f"#contents > table:nth-child(12) >  tr:nth-child({index})"
         ):
             td_element = element[0].findall("td")
 
