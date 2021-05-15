@@ -24,7 +24,7 @@ def fetch_and_save_syllabus_html(tmpdir_factory):
     time.sleep(1)
 
     response = requests.get("https://syllabus.naist.jp/subjects/preview_detail/666")
-    detail_file = syllabus_directory.join("subjects/preview_detail/666.html")
+    detail_file = syllabus_directory.join("detail_1.html")
     detail_file.write(response.content)
 
     return syllabus_file.dirpath()
