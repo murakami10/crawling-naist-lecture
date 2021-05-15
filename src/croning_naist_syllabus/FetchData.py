@@ -1,4 +1,5 @@
 import re
+import time
 from typing import NamedTuple
 
 import lxml.html
@@ -67,6 +68,9 @@ class FetchData:
         for lecture in lectures:
             if not isinstance(lecture, LectureNameUrl):
                 continue
+
+            # スクレイピングするサーバに迷惑をかけないために、間隔をあける
+            time.sleep(1)
 
             response = requests.get(lecture.url)
 
