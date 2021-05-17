@@ -26,17 +26,17 @@ def test_fetch_data():
 
     fetch_data.scrape_details(specialized_lectures)
 
-    assert 1 == fetch_data.lectures_details[specialized_lectures[0].name][0].number
+    assert 1 == fetch_data.lecture_details[specialized_lectures[0].name][0].number
     assert (
-        "4/22 [2]" == fetch_data.lectures_details[specialized_lectures[0].name][0].date
+        "4/22 [2]" == fetch_data.lecture_details[specialized_lectures[0].name][0].date
     )
     assert (
         "スーパスカラとVLIW (日本語教科書８章)"
-        == fetch_data.lectures_details[specialized_lectures[0].name][0].theme
+        == fetch_data.lecture_details[specialized_lectures[0].name][0].theme
     )
 
-    assert 1 == fetch_data.lectures_details[specialized_lectures[1].name][0].number
+    assert 1 == fetch_data.lecture_details[specialized_lectures[1].name][0].number
     assert (
-        "4/26 [2]" == fetch_data.lectures_details[specialized_lectures[1].name][0].date
+        "4/26 [2]" == fetch_data.lecture_details[specialized_lectures[1].name][0].date
     )
-    assert "概論" == fetch_data.lectures_details[specialized_lectures[1].name][0].theme
+    assert "概論" == fetch_data.lecture_details[specialized_lectures[1].name][0].theme
