@@ -6,6 +6,18 @@ import lxml.html
 import requests
 
 
+class LectureNameUrl(NamedTuple):
+    name: str
+    url: str
+
+
+class LectureDetail(NamedTuple):
+    number: int
+    date: str
+    theme: str
+    content: str
+
+
 class FetchData:
 
     LECTURE_TYPE_GENERAL = "general"
@@ -64,7 +76,7 @@ class FetchData:
 
     def scrape_details(self, lectures: list):
 
-        self.lectures_details = {}
+        self.lecture_details = {}
         for lecture in lectures:
             if not isinstance(lecture, LectureNameUrl):
                 continue
@@ -77,9 +89,7 @@ class FetchData:
             # 無効なurlの際に例外を投げる
             response.raise_for_status()
 
-            self.lectures_details[lecture.name] = self.scrape_detail_of_lecture(
-                response
-            )
+            self.lecture_details[lecture.name] = self.scrape_detail_of_lecture(response)
 
     def scrape_detail_of_lecture(self, response: requests.Response):
         """
@@ -111,14 +121,6 @@ class FetchData:
             index += 1
         return lecture
 
+    def get_lecture_details(self) -> dict:
 
-class LectureNameUrl(NamedTuple):
-    name: str
-    url: str
-
-
-class LectureDetail(NamedTuple):
-    number: int
-    date: str
-    theme: str
-    content: str
+        return self.lecture_details
