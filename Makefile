@@ -9,3 +9,5 @@ rebuild:
 	docker-compose build --no-cache
 test:
 	docker-compose exec app pytest
+testv:
+	docker-compose exec app pytest -v
