@@ -3,7 +3,8 @@ import pytest
 from src.croning_naist_syllabus.FetchData import FetchData
 from src.croning_naist_syllabus.OperateMongoDB import OperateMongoDB
 
-from .test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
+from .test_data import (lecture_test_data1, lecture_test_data2,
+                        lecture_test_data3)
 
 # テストで用いるcollectionの名前
 TEST_LECTURE_TYPE = FetchData.LECTURE_TYPE_SPECIALIZED
@@ -58,7 +59,7 @@ def test_init():
     _ = OperateMongoDB(serverSelectionTimeoutMS=3)
 
 
-def test_select_database_from_lecture_type(omd_connect_db):
+def test_select_collection_from_lecture_type(omd_connect_db):
     omd: OperateMongoDB = omd_connect_db
     omd.select_collection_from_lecture_type(FetchData.LECTURE_TYPE_BASIC)
 
