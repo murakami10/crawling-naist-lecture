@@ -9,6 +9,8 @@ requests = "*"
 lxml = "*"
 cssselect = "*"
 pytest = "*"
+pysimplegui = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
