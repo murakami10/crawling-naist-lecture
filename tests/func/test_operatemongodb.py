@@ -2,7 +2,8 @@ import pytest
 
 from src.croning_naist_syllabus.FetchData import FetchData
 from src.croning_naist_syllabus.OperateMongoDB import OperateMongoDB
-from tests.test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
+from tests.test_data import (lecture_test_data1, lecture_test_data2,
+                             lecture_test_data3)
 
 # テストで用いるcollectionの名前
 TEST_LECTURE_TYPE = FetchData.LECTURE_TYPE_SPECIALIZED
@@ -87,7 +88,7 @@ def test_add_lecture_detail(omd_select_collection):
     omd.add_lecture_detail([lecture_test_data1])
 
     assert (
-        omd.collection.find_one({"name": "高性能計算基盤"})["details"]
+        omd.collection.find_one({"name": lecture_test_data1["name"]})["details"]
         == lecture_test_data1["details"]
     )
 
