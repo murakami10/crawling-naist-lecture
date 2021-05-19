@@ -32,6 +32,13 @@ class FetchData:
         LECTURE_TYPE_INTRODUCTION,
     ]
 
+    EN_TO_JA = {
+        LECTURE_TYPE_GENERAL: "一般科目",
+        LECTURE_TYPE_INTRODUCTION: "序論科目",
+        LECTURE_TYPE_BASIC: "基礎科目",
+        LECTURE_TYPE_SPECIALIZED: "専門科目",
+    }
+
     START_INDEX_OF_LECTURE = {
         LECTURE_TYPE_GENERAL: 5,
         LECTURE_TYPE_INTRODUCTION: 35,
@@ -97,6 +104,15 @@ class FetchData:
             response.raise_for_status()
 
             self.lecture_details[lecture.name] = self.scrape_detail_of_lecture(response)
+
+    def scrape_one_details(self, url):
+
+        response = requests.get(url)
+
+        # 無効なurlの際に例外を投げる
+        response.raise_for_status()
+
+        return self.scrape_detail_of_lecture(response)
 
     def scrape_detail_of_lecture(self, response: requests.Response):
         """

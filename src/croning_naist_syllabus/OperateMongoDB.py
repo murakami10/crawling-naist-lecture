@@ -70,12 +70,23 @@ class OperateMongoDB:
             if update is None:
                 logger.warning("Can't find " + lecture_detail["name"])
 
-    def get_lecture_detail(self, lecture_type, lecture_name):
-
-        self.select_collection_from_lecture_type(lecture_type)
+    def get_lecture_detail(self, lecture_name):
 
         lecture = self.collection.find_one({"name": lecture_name})
         if lecture is None:
             logger.error(lecture_name + " is not existed in db")
             exit()
         return lecture["details"]
+
+    def get_lecture(self, lecture_name):
+
+        lecture = self.collection.find_one({"name": lecture_name})
+        if lecture is None:
+            logger.error(lecture_name + " is not existed in db")
+            exit()
+        return lecture
+
+    def get_all_lecture(self, lecture_type):
+        self.select_collection_from_lecture_type(lecture_type)
+        lectures = self.collection.find()
+        return lectures
