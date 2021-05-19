@@ -11,3 +11,5 @@ test:
 	docker-compose exec app pytest
 testv:
 	docker-compose exec app pytest -v
+app:
+	docker-compose exec app bash
