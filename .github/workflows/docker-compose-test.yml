@@ -18,6 +18,9 @@ jobs:
 
       - name: Build the stack
         run: docker-compose up -d
+        
+      - name: check proces
+        run: docker-compose ps
 
       - name: Run test
         run: docker-compose exec app pytest
