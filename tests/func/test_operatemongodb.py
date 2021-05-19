@@ -2,8 +2,7 @@ import pytest
 
 from src.croning_naist_syllabus.FetchData import FetchData
 from src.croning_naist_syllabus.OperateMongoDB import OperateMongoDB
-from tests.test_data import (lecture_test_data1, lecture_test_data2,
-                             lecture_test_data3)
+from tests.test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
 
 # テストで用いるcollectionの名前
 TEST_LECTURE_TYPE = FetchData.LECTURE_TYPE_SPECIALIZED
@@ -132,11 +131,11 @@ def test_update_lecture_details(omd_data_is_set, monkeypatch, caplog):
 def test_get_lecture_details(omd_data_is_set, caplog):
     omd: OperateMongoDB = omd_data_is_set
 
-    details = omd.get_lecture_detail(TEST_LECTURE_TYPE, lecture_test_data1["name"])
+    details = omd.get_lecture_detail(lecture_test_data1["name"])
 
     assert details == lecture_test_data1["details"]
 
     with pytest.raises(SystemExit):
-        omd.get_lecture_detail(TEST_LECTURE_TYPE, lecture_test_data3["name"])
+        omd.get_lecture_detail(lecture_test_data3["name"])
 
     assert lecture_test_data3["name"] + " is not existed in db" in caplog.messages
