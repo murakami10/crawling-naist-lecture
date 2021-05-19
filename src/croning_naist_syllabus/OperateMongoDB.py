@@ -2,20 +2,22 @@ import logging
 import os
 
 import pymongo.collection
+from dotenv import load_dotenv
 from pymongo import MongoClient, common
 
 from .FetchData import FetchData
 
 logger = logging.getLogger(__name__)
+load_dotenv()
 
 
 class OperateMongoDB:
     def __init__(
         self,
-        host="mongodb",
-        port=int(os.environ["MONGO_PORT"]),
-        username=os.environ["MONGO_INIT_USERNAME"],
-        password=os.environ["MONGO_INIT_PASSWORD"],
+        host="127.0.0.1",
+        port=int(os.getenv("MONGO_PORT")),
+        username=os.getenv("MONGO_INIT_USERNAME"),
+        password=os.getenv("MONGO_INIT_PASSWORD"),
         serverSelectionTimeoutMS=common.SERVER_SELECTION_TIMEOUT,
     ):
 
