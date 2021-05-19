@@ -7,6 +7,8 @@ services:
       context: .
       dockerfile: Dockerfile
     tty: true
+    env_file:
+      - .env
     volumes:
       - ./src:/usr/app/src
       - ./tests:/usr/app/tests
@@ -15,8 +17,8 @@ services:
   mongodb:
     image: mongo:4.4.6
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INIT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INIT_PASSWORD}
     ports:
       - 27017:27017
     volumes:
