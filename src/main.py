@@ -1,4 +1,4 @@
-from croning_naist_syllabus.GUI import GUI
+from croning_naist_syllabus.gui import GUI
 
 if __name__ == "__main__":
     gui = GUI()

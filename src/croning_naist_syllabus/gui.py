@@ -2,8 +2,8 @@ import logging
 
 import PySimpleGUI as sg
 
-from .FetchData import FetchData
-from .OperateMongoDB import OperateMongoDB
+from .fetch import FetchData
+from .operatedb import OperateMongoDB
 
 logger = logging.getLogger(__name__)
 

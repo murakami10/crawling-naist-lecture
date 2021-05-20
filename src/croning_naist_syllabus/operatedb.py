@@ -5,7 +5,7 @@ import pymongo.collection
 from dotenv import load_dotenv
 from pymongo import MongoClient, common
 
-from .FetchData import FetchData
+from .fetch import FetchData
 
 logger = logging.getLogger(__name__)
 load_dotenv()

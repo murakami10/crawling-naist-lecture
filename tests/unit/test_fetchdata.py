@@ -1,4 +1,4 @@
-from src.croning_naist_syllabus.FetchData import FetchData, LectureNameUrl
+from src.croning_naist_syllabus.fetch import FetchData, LectureNameUrl
 
 
 def test_fetch_data():

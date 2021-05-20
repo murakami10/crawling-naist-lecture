@@ -1,8 +1,9 @@
 import pytest
 
-from src.croning_naist_syllabus.FetchData import FetchData
-from src.croning_naist_syllabus.OperateMongoDB import OperateMongoDB
-from tests.test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
+from src.croning_naist_syllabus.fetch import FetchData
+from src.croning_naist_syllabus.operatedb import OperateMongoDB
+from tests.test_data import (lecture_test_data1, lecture_test_data2,
+                             lecture_test_data3)
 
 # テストで用いるcollectionの名前
 TEST_LECTURE_TYPE = FetchData.LECTURE_TYPE_SPECIALIZED

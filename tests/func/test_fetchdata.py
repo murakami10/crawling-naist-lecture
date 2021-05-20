@@ -5,8 +5,7 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 import pytest
 import requests
 
-from src.croning_naist_syllabus.FetchData import (FetchData, LectureDetail,
-                                                  LectureNameUrl)
+from src.croning_naist_syllabus.fetch import FetchData, LectureDetail, LectureNameUrl
 
 
 @pytest.fixture(scope="session")
