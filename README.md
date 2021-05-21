@@ -1,8 +1,7 @@
 # Croning-Naist-Lecture
 授業の情報(シラバス)をWebスクレイピングで自動で入手し、データベースに保存するプログラムです。  
 
-![詳細画面](https://user-images.githubusercontent.com/53958213/118884010-e36be580-b930-11eb-967d-a61aee9b4d0a.png)  
-![授業の詳細画面](https://user-images.githubusercontent.com/53958213/118883966-d8b15080-b930-11eb-927f-0571e3f74692.png)  
+![操作画面](https://user-images.githubusercontent.com/53958213/119133779-41a2e080-ba77-11eb-8a0c-10fdec0290a0.png)
 
 # セットアップ方法
 gitとdocker-compose, Pythonのパッケージ管理システムであるpipを用いてセットアップができます。  
