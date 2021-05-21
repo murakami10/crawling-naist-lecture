@@ -1,4 +1,8 @@
+import logging
+
 from croning_naist_syllabus.gui import GUI
+
+logger = logging.getLogger()
 
 if __name__ == "__main__":
     gui = GUI()
@@ -6,7 +10,7 @@ if __name__ == "__main__":
 
     while True:
         event, values = window.read()
-        print(event, values)
+        logger.debug(event, values)
         if event == None:
             break
         elif event == "display_lecture":
