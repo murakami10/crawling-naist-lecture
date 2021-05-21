@@ -1,6 +1,6 @@
 import pytest
 
-from src.croning_naist_syllabus.OperateMongoDB import FetchData, OperateMongoDB
+from src.croning_naist_syllabus.operatedb import FetchData, OperateMongoDB
 from tests.test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
 
 
@@ -35,7 +35,7 @@ def test_operaete_mongo_db(clear_collection):
     )
 
     # DBをupdateする
-    omd.update_lecture_details([lecture_test_data2])
+    omd.update_lecture_details_with_name([lecture_test_data2])
     assert (
         omd.collection.find_one({"name": lecture_test_data2["name"]})["details"]
         == lecture_test_data2["details"]

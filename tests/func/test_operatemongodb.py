@@ -1,7 +1,7 @@
 import pytest
 
-from src.croning_naist_syllabus.FetchData import FetchData
-from src.croning_naist_syllabus.OperateMongoDB import OperateMongoDB
+from src.croning_naist_syllabus.fetch import FetchData
+from src.croning_naist_syllabus.operatedb import OperateMongoDB
 from tests.test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
 
 # テストで用いるcollectionの名前
@@ -116,7 +116,7 @@ def test_update_lecture_details(omd_data_is_set, monkeypatch, caplog):
     omd: OperateMongoDB = omd_data_is_set
 
     # lecture_test_data1はすでにデータに登録されている
-    omd.update_lecture_details([lecture_test_data2, lecture_test_data3])
+    omd.update_lecture_details_with_name([lecture_test_data2, lecture_test_data3])
 
     assert (
         omd.collection.find_one({"name": lecture_test_data2["name"]})["details"]
@@ -124,8 +124,6 @@ def test_update_lecture_details(omd_data_is_set, monkeypatch, caplog):
     )
 
     assert omd.collection.find_one({"name": lecture_test_data3["name"]}) is None
-
-    assert "Can't find " + lecture_test_data3["name"] in caplog.messages
 
 
 def test_get_lecture_details(omd_data_is_set, caplog):
