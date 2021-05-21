@@ -5,7 +5,7 @@ import pymongo.collection
 from dotenv import load_dotenv
 from pymongo import MongoClient, common
 
-from .fetch import FetchData
+from .fetch import FetchData, LectureDetail
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -65,8 +65,14 @@ class OperateMongoDB:
         for lecture_detail in lecture_details:
             details = []
             for detail in lecture_detail["details"]:
-                tmp = detail._asdict()
-                details.append(tmp)
+                if isinstance(detail, LectureDetail):
+                    detail_dict = detail._asdict()
+                elif isinstance(detail, dict):
+                    detail_dict = detail
+                else:
+                    logger.error("detail is not LectureDetail or dict")
+                    exit()
+                details.append(detail_dict)
             update = self.collection.update_one(
                 filter={"name": lecture_detail["name"]},
                 update={"$set": {"details": details}},

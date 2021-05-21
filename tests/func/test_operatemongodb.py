@@ -125,8 +125,6 @@ def test_update_lecture_details(omd_data_is_set, monkeypatch, caplog):
 
     assert omd.collection.find_one({"name": lecture_test_data3["name"]}) is None
 
-    assert "Can't find " + lecture_test_data3["name"] in caplog.messages
-
 
 def test_get_lecture_details(omd_data_is_set, caplog):
     omd: OperateMongoDB = omd_data_is_set
