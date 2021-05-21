@@ -9,14 +9,14 @@ if __name__ == "__main__":
         print(event, values)
         if event == None:
             break
-        elif event == "start_display":
+        elif event == "display_lecture":
             window.close()
-            window = gui.request_lectures()
-        elif event == "request_lectures":
-            window.close()
-            window = gui.display_lecture(values)
-        elif event == "detail":
+            window = gui.display_lectures(values)
+        elif event == "display_detail":
             window.close()
             window = gui.display_details(values)
+        elif event == "refetch_details":
+            window.close()
+            window = gui.display_details(values, True)
 
     window.close()

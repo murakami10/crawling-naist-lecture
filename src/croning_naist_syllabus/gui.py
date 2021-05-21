@@ -2,7 +2,8 @@ import logging
 
 import PySimpleGUI as sg
 
-from .fetch import FetchData
+from .control import load_data, load_details_data
+from .fetch import FetchData, LectureDetail
 from .operatedb import OperateMongoDB
 
 logger = logging.getLogger(__name__)
@@ -11,136 +12,197 @@ logger = logging.getLogger(__name__)
 class GUI:
 
     sg.theme("SandyBeach")
-    SIZE = (300, 300)
 
     def __init__(self, url="https://syllabus.naist.jp/subjects/preview_list"):
         self.url = url
         self.fd = FetchData(self.url)
         self.omd = OperateMongoDB()
-        self.omd.client.drop_database(self.omd.database_name)
 
     def start_display(self):
-        layout = [
-            [
-                sg.Button(
-                    "授業情報を取得する",
-                    font=(10),
-                    size=(15, 3),
-                    key="start_display",
-                    button_color=("#000000", "#ffffff"),
-                )
-            ]
-        ]
+        layout = self._get_lecture_type_layout()
+
+        layout.append([sg.Button("授業一覧を表示する", key="display_lecture", font=(20))])
         return sg.Window(
-            "NAIST講義クローニング", layout, element_justification="c", size=self.SIZE
+            "NAISTの授業一覧", layout, element_justification="c", size=(200, 150)
         )
 
-    def request_lectures(self):
-        # fix
-        self.omd.client.drop_database(self.omd.database_name)
+    def display_lectures(self, lecture_types: dict):
 
-        self.fd.scrape_lectures(FetchData.LECTURE_TYPES)
-        layout = []
-        for lecture_type, names_and_urls in self.fd.name_and_url_of_lectures.items():
-            self.omd.select_collection_from_lecture_type(lecture_type)
-            layout.append(
-                [
-                    sg.Radio(
-                        FetchData.EN_TO_JA[lecture_type],
-                        group_id="lecture_type",
-                        key=lecture_type,
-                    )
-                ]
-            )
+        checked_lecture_type = None
 
-            for name_and_url in names_and_urls:
-                self.omd.add_lecture_detail(
-                    [{"name": name_and_url.name, "url": name_and_url.url}]
-                )
-
-        layout.append([sg.Button("一覧を表示する", key="request_lectures")])
-        return sg.Window(
-            "NAISTの授業一覧", layout, element_justification="c", size=self.SIZE
-        )
-
-    def display_lecture(self, lecture_types: dict):
-        layout1 = []
-        type = None
         for lecture_type, checked in lecture_types.items():
 
             if not lecture_type in FetchData.LECTURE_TYPES:
                 continue
 
-            if checked:
-                type = lecture_type
+            if checked == True:
+                checked_lecture_type = lecture_type
+                break
 
-            layout1.append(
-                [
-                    sg.Radio(
-                        FetchData.EN_TO_JA[lecture_type],
-                        default=checked,
-                        group_id="lecture_type",
-                        key=lecture_type,
-                    )
-                ]
-            )
-
-        layout1.append([sg.Button("一覧を表示する", key="request_lectures")])
-
-        if type is None:
-            logger.error("type is None in diplay_lecture method")
+        if checked_lecture_type is None:
+            logger.error("type is not checked")
             exit()
 
-        lectures = self.omd.get_all_lecture(type)
-        layout2 = []
-        layout2_two_set = []
-        for lecture in lectures:
-            if len(layout2_two_set) == 2:
-                layout2.append(layout2_two_set)
-                layout2_two_set = []
+        layout_lecture_type = self._get_lecture_type_layout(checked_lecture_type)
+        layout_lecture_type.append([sg.Button("一覧を表示", key="start_display", font=(20))])
 
-            layout2_two_set.append(
-                sg.Radio(lecture["name"], group_id="lecture", key=lecture["name"])
-            )
+        layout_lecture_column = self._get_lecture_column_layout(checked_lecture_type)
 
-        layout2.append(layout2_two_set)
-        layout2.append([sg.Button("詳細を表示する", key="detail")])
+        layout = [
+            [
+                sg.Frame(
+                    "Lecture Type",
+                    layout=layout_lecture_type,
+                ),
+                sg.Frame(
+                    "Lecture",
+                    layout=[
+                        layout_lecture_column,
+                        [sg.Button("授業の詳細を表示する", font=(20), key="display_detail")],
+                    ],
+                ),
+            ]
+        ]
 
-        layout = [[sg.Frame("", layout1), sg.Frame(FetchData.EN_TO_JA[type], layout2)]]
+        return sg.Window("授業一覧", layout, resizable=True, size=(1300, 700))
 
-        return sg.Window("授業一覧", layout, element_justification="c")
+    def display_details(self, lectures: dict, refetch=False):
 
-    def display_details(self, lectures: dict):
         lecture_name = None
+        checked_lecture_type = None
+
         for lecture, checked in lectures.items():
+
             if lecture in FetchData.LECTURE_TYPES:
+
+                if checked:
+                    checked_lecture_type = lecture
                 continue
 
             if checked:
                 lecture_name = lecture
                 break
 
-        if lecture_name is None:
-            logger.error("lecture_name is None")
+            if lecture == "detail_name":
+                lecture_name = checked
+
+        if checked_lecture_type is None:
+            logger.error("type is not checked")
             exit()
 
-        lecture = self.omd.get_lecture(lecture_name)
-        lecture_details = {
-            "name": lecture_name,
-            "details": self.fd.scrape_one_details(lecture["url"]),
-        }
-        self.omd.update_lecture_details([lecture_details])
-        layout = []
-        for lecture in lecture_details["details"]:
-            layout.append(
+        if lecture_name is None:
+            logger.error("lecture is not checked")
+            exit()
+
+        layout_lecture_type = self._get_lecture_type_layout(checked_lecture_type)
+        layout_lecture_type.append(
+            [sg.Button("一覧を表示", key="display_lecture", font=(20))]
+        )
+
+        layout_lecture_column = self._get_lecture_column_layout(
+            checked_lecture_type, lecture_name
+        )
+
+        layout_lecture_details = self._get_lecture_details_layout(
+            checked_lecture_type, lecture_name, refetch
+        )
+        layout_lecture_details.append(
+            [sg.Button("授業の詳細を再取得する", font=(20), key="refetch_details")]
+        )
+
+        layout = [
+            [
+                sg.Frame(
+                    "Lecture Type",
+                    layout=layout_lecture_type,
+                ),
+                sg.Frame(
+                    "Lecture",
+                    layout=[
+                        layout_lecture_column,
+                        [sg.Button("授業の詳細を表示する", font=(20), key="display_detail")],
+                    ],
+                ),
+                sg.Frame(
+                    "Details",
+                    layout=layout_lecture_details,
+                    font=(30),
+                ),
+            ]
+        ]
+
+        return sg.Window("授業の詳細", layout, size=(1300, 700))
+
+    def _get_lecture_type_layout(
+        self, checked_lecture_type=FetchData.LECTURE_TYPE_SPECIALIZED
+    ):
+        layouts = []
+
+        for lecture_type in FetchData.LECTURE_TYPES:
+            layouts.append(
                 [
-                    sg.Text(lecture.number),
-                    sg.Text(lecture.date),
-                    sg.Text(lecture.theme),
-                    sg.Text(lecture.content),
+                    sg.Radio(
+                        FetchData.EN_TO_JA[lecture_type],
+                        group_id="lecture_type",
+                        default=True if checked_lecture_type == lecture_type else False,
+                        key=lecture_type,
+                        font=(20),
+                    )
                 ]
             )
 
-        layout.append([sg.Button("戻る", key="start_display")])
+        return layouts
 
-        return sg.Window("授業の詳細", layout)
+    def _get_lecture_column_layout(
+        self, checked_lecture_type, checked_lecture_name="not_checked"
+    ):
+        lectures = load_data(checked_lecture_type, self.omd, self.fd)
+        layout_lecture = []
+        for lecture in lectures:
+            layout_lecture.append(
+                [
+                    sg.Radio(
+                        lecture["name"],
+                        group_id="lecture",
+                        key=lecture["name"],
+                        default=True
+                        if checked_lecture_name == lecture["name"]
+                        else False,
+                        font=(20),
+                    )
+                ]
+            )
+
+        layout_lecture_column = [
+            sg.Column(
+                layout_lecture,
+                scrollable=True,
+                vertical_scroll_only=True,
+                size=(300, 600),
+            )
+        ]
+
+        return layout_lecture_column
+
+    def _get_lecture_details_layout(
+        self, checked_lecture_type, lecture_name, refetch=False
+    ):
+        lecture_details = load_details_data(
+            checked_lecture_type, lecture_name, refetch, self.omd, self.fd
+        )
+        layout_lecture_details = []
+        for lecture in lecture_details:
+
+            if isinstance(lecture, LectureDetail):
+                detail: dict = lecture._asdict()
+            elif isinstance(lecture, dict):
+                detail: dict = lecture
+            else:
+                logger.error("lecture type is not dict or LectureNameUrl")
+                exit()
+
+            layout_lecture_details.append(
+                [sg.Text(value, font=(20)) for value in detail.values()]
+            )
+
+        return layout_lecture_details

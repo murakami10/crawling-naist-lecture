@@ -2,8 +2,7 @@ import pytest
 
 from src.croning_naist_syllabus.fetch import FetchData
 from src.croning_naist_syllabus.operatedb import OperateMongoDB
-from tests.test_data import (lecture_test_data1, lecture_test_data2,
-                             lecture_test_data3)
+from tests.test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
 
 # テストで用いるcollectionの名前
 TEST_LECTURE_TYPE = FetchData.LECTURE_TYPE_SPECIALIZED
@@ -117,7 +116,7 @@ def test_update_lecture_details(omd_data_is_set, monkeypatch, caplog):
     omd: OperateMongoDB = omd_data_is_set
 
     # lecture_test_data1はすでにデータに登録されている
-    omd.update_lecture_details([lecture_test_data2, lecture_test_data3])
+    omd.update_lecture_details_with_name([lecture_test_data2, lecture_test_data3])
 
     assert (
         omd.collection.find_one({"name": lecture_test_data2["name"]})["details"]
