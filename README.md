@@ -1,4 +1,4 @@
-# Croning-Naist-Lecture
+# Crawling-Naist-Lecture
 授業の情報(シラバス)をWebスクレイピングで自動で入手し、データベースに保存するプログラムです。  
 
 ![操作画面](https://user-images.githubusercontent.com/53958213/119133779-41a2e080-ba77-11eb-8a0c-10fdec0290a0.png)
