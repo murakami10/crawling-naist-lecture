@@ -1,7 +1,8 @@
 import pytest
 
 from src.crawling_naist_syllabus.operatedb import FetchData, OperateMongoDB
-from tests.test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
+from tests.test_data import (lecture_test_data1, lecture_test_data2,
+                             lecture_test_data3)
 
 
 @pytest.fixture()
@@ -23,8 +24,6 @@ def test_operaete_mongo_db(clear_collection):
 
     # レクチャーをDBに登録
     omd.add_lecture_detail([lecture_test_data1, lecture_test_data3])
-    print(omd.collection.find_one({"name": lecture_test_data1["name"]})["details"])
-    print(lecture_test_data1["details"])
     assert (
         omd.collection.find_one({"name": lecture_test_data1["name"]})["details"]
         == lecture_test_data1["details"]
