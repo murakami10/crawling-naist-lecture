@@ -1,7 +1,10 @@
 import pytest
 
 from src.crawling_naist_syllabus.operatedb import FetchData, OperateMongoDB
-from tests.test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
+from tests.test_data import (lecture_test_data1, lecture_test_data2,
+                             lecture_test_data3)
+
+TEST_DATABASE_NAME = "test_db"
 
 
 @pytest.fixture()
@@ -9,13 +12,13 @@ def clear_collection():
     """
     テストの前にcollectionを消しておく
     """
-    omd = OperateMongoDB()
+    omd = OperateMongoDB(database_name=TEST_DATABASE_NAME)
     omd.select_collection_from_lecture_type(FetchData.LECTURE_TYPE_SPECIALIZED)
     omd.database.drop_collection(FetchData.LECTURE_TYPE_SPECIALIZED)
 
 
 def test_operaete_mongo_db(clear_collection):
-    omd = OperateMongoDB()
+    omd = OperateMongoDB(database_name=TEST_DATABASE_NAME)
 
     # LECTURE_TYPE_SPECIALIZEDというcollectionを作る
     test_collection = FetchData.LECTURE_TYPE_SPECIALIZED
