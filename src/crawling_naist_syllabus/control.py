@@ -24,7 +24,11 @@ def load_data(lecture_type, omd: OperateMongoDB, fd: FetchData):
 
 
 def load_details_data(
-    checked_lecture_type, lecture_name, refetch, omd: OperateMongoDB, fd: FetchData
+    checked_lecture_type,
+    lecture_name,
+    omd: OperateMongoDB,
+    fd: FetchData,
+    refetch=False,
 ):
     """
     授業の詳細データをDBから取得する。なければrequestを送り取得、保存する

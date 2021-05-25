@@ -188,7 +188,7 @@ class GUI:
         self, checked_lecture_type, lecture_name, refetch=False
     ):
         lecture_details = load_details_data(
-            checked_lecture_type, lecture_name, refetch, self.omd, self.fd
+            checked_lecture_type, lecture_name, self.omd, self.fd, refetch
         )
         layout_lecture_details = []
         for lecture in lecture_details:
