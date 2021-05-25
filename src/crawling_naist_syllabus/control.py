@@ -18,7 +18,7 @@ def load_data(lecture_type, omd: OperateMongoDB, fd: FetchData):
                     [{"name": name_and_url.name, "url": name_and_url.url}]
                 )
 
-    lectures = omd.get_all_lecture(lecture_type)
+    lectures = omd.get_all_lectures(lecture_type)
 
     return lectures
 

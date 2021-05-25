@@ -19,6 +19,7 @@ class OperateMongoDB:
         username=os.getenv("MONGO_INIT_USERNAME"),
         password=os.getenv("MONGO_INIT_PASSWORD"),
         serverSelectionTimeoutMS=common.SERVER_SELECTION_TIMEOUT,
+        database_name="lecture_details",
     ):
 
         self.client = MongoClient(
@@ -29,11 +30,8 @@ class OperateMongoDB:
             serverSelectionTimeoutMS=serverSelectionTimeoutMS,
         )
 
-        self.database_name = "lecture_details"
+        self.database_name = database_name
         self.database = self.client[self.database_name]
-
-    def __del__(self):
-        self.client.close()
 
     def select_collection_from_lecture_type(self, lecture_type):
 
@@ -64,6 +62,7 @@ class OperateMongoDB:
 
         for lecture_detail in lecture_details:
             details = []
+            # lecture_details["details"]がLectureDetailのinstanceであれば辞書型に変える
             for detail in lecture_detail["details"]:
                 if isinstance(detail, LectureDetail):
                     detail_dict = detail._asdict()
@@ -80,7 +79,7 @@ class OperateMongoDB:
             if update is None:
                 logger.warning("Can't find " + lecture_detail["name"])
 
-    def get_lecture_detail(self, lecture_name):
+    def get_lecture_details(self, lecture_name):
 
         lecture = self.collection.find_one({"name": lecture_name})
         if lecture is None:
@@ -97,12 +96,12 @@ class OperateMongoDB:
             exit()
         return lecture
 
-    def get_all_lecture(self, lecture_type):
+    def get_all_lectures(self, lecture_type):
         self.select_collection_from_lecture_type(lecture_type)
         lectures = self.collection.find()
         return lectures
 
     def count_lecture(self, lecture_type):
         self.select_collection_from_lecture_type(lecture_type)
-        count = self.collection.count()
+        count = self.collection.estimated_document_count()
         return count
