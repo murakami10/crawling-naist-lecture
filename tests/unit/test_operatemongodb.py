@@ -1,7 +1,8 @@
 import pytest
 
-from src.croning_naist_syllabus.operatedb import FetchData, OperateMongoDB
-from tests.test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
+from src.crawling_naist_syllabus.operatedb import FetchData, OperateMongoDB
+from tests.test_data import (lecture_test_data1, lecture_test_data2,
+                             lecture_test_data3)
 
 
 @pytest.fixture()

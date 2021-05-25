@@ -1,6 +1,6 @@
 import logging
 
-from croning_naist_syllabus.gui import GUI
+from crawling_naist_syllabus.gui import GUI
 
 logger = logging.getLogger()
 
