@@ -2,10 +2,23 @@ import pytest
 
 from src.crawling_naist_syllabus.fetch import FetchData
 from src.crawling_naist_syllabus.operatedb import OperateMongoDB
-from tests.test_data import lecture_test_data1, lecture_test_data2, lecture_test_data3
+from tests.test_data import (lecture_test_data1, lecture_test_data2,
+                             lecture_test_data3)
 
 # テストで用いるcollectionの名前
 TEST_LECTURE_TYPE = FetchData.LECTURE_TYPE_SPECIALIZED
+
+
+# select_collection_from_typeをスタブする
+def set_attr_to_select_collection_from_lecture_type(monkeypatch):
+    def dummy_func_select_collection_from_lecture_type(self, lecture_type):
+        self.collection = self.database[lecture_type]
+
+    monkeypatch.setattr(
+        OperateMongoDB,
+        "select_collection_from_lecture_type",
+        dummy_func_select_collection_from_lecture_type,
+    )
 
 
 @pytest.fixture()
@@ -25,16 +38,8 @@ def omd_connect_db(monkeypatch):
 def omd_select_collection(omd_connect_db, monkeypatch):
     omd: OperateMongoDB = omd_connect_db
 
-    def dummy_func_select_collection_from_lecture_type(self, lecture_type):
-        self.collection = self.database[lecture_type]
-
-    monkeypatch.setattr(
-        OperateMongoDB,
-        "select_collection_from_lecture_type",
-        dummy_func_select_collection_from_lecture_type,
-    )
+    set_attr_to_select_collection_from_lecture_type(monkeypatch)
     omd.select_collection_from_lecture_type(TEST_LECTURE_TYPE)
-
     return omd
 
 
@@ -166,14 +171,7 @@ def test_get_lecture(omd_with_one_document, monkeypatch):
 
     omd: OperateMongoDB = omd_with_one_document
 
-    def dummy_func_select_collection_from_lecture_type(self, lecture_type):
-        self.collection = self.database[lecture_type]
-
-    monkeypatch.setattr(
-        OperateMongoDB,
-        "select_collection_from_lecture_type",
-        dummy_func_select_collection_from_lecture_type,
-    )
+    set_attr_to_select_collection_from_lecture_type(monkeypatch)
 
     lecture = omd.get_lecture(TEST_LECTURE_TYPE, lecture_test_data1["name"])
     assert lecture["name"] == lecture_test_data1["name"]
@@ -183,14 +181,7 @@ def test_get_lecture(omd_with_one_document, monkeypatch):
 def test_get_all_lectures(omd_with_two_document, monkeypatch):
     omd: OperateMongoDB = omd_with_two_document
 
-    def dummy_func_select_collection_from_lecture_type(self, lecture_type):
-        self.collection = self.database[lecture_type]
-
-    monkeypatch.setattr(
-        OperateMongoDB,
-        "select_collection_from_lecture_type",
-        dummy_func_select_collection_from_lecture_type,
-    )
+    set_attr_to_select_collection_from_lecture_type(monkeypatch)
 
     lectures = omd.get_all_lectures(TEST_LECTURE_TYPE)
     for lecture in lectures:
@@ -208,13 +199,6 @@ def test_get_all_lectures(omd_with_two_document, monkeypatch):
 def test_count_lecture(omd_with_one_document, monkeypatch):
     omd: OperateMongoDB = omd_with_one_document
 
-    def dummy_func_select_collection_from_lecture_type(self, lecture_type):
-        self.collection = self.database[lecture_type]
-
-    monkeypatch.setattr(
-        OperateMongoDB,
-        "select_collection_from_lecture_type",
-        dummy_func_select_collection_from_lecture_type,
-    )
+    set_attr_to_select_collection_from_lecture_type(monkeypatch)
 
     assert omd.count_lecture(TEST_LECTURE_TYPE) == 1
