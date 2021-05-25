@@ -18,13 +18,17 @@ def load_data(lecture_type, omd: OperateMongoDB, fd: FetchData):
                     [{"name": name_and_url.name, "url": name_and_url.url}]
                 )
 
-    lectures = omd.get_all_lecture(lecture_type)
+    lectures = omd.get_all_lectures(lecture_type)
 
     return lectures
 
 
 def load_details_data(
-    checked_lecture_type, lecture_name, refetch, omd: OperateMongoDB, fd: FetchData
+    checked_lecture_type,
+    lecture_name,
+    omd: OperateMongoDB,
+    fd: FetchData,
+    refetch=False,
 ):
     """
     授業の詳細データをDBから取得する。なければrequestを送り取得、保存する
@@ -35,7 +39,7 @@ def load_details_data(
     if "details" in lecture.keys() and not refetch:
         return lecture["details"]
 
-    details = fd.scrape_one_details(lecture["url"])
+    details = fd.get_one_lecture_details(lecture["url"])
     lecture_details = {
         "name": lecture_name,
         "details": details,

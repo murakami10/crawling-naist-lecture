@@ -1,5 +1,4 @@
 import re
-import time
 from typing import NamedTuple
 
 import lxml.html
@@ -88,24 +87,7 @@ class FetchData:
 
         return lecture_datas
 
-    def scrape_details(self, lectures: list):
-
-        self.lecture_details = {}
-        for lecture in lectures:
-            if not isinstance(lecture, LectureNameUrl):
-                continue
-
-            # スクレイピングするサーバに迷惑をかけないために、間隔をあける
-            time.sleep(1)
-
-            response = requests.get(lecture.url)
-
-            # 無効なurlの際に例外を投げる
-            response.raise_for_status()
-
-            self.lecture_details[lecture.name] = self.scrape_detail_of_lecture(response)
-
-    def scrape_one_details(self, url):
+    def get_one_lecture_details(self, url):
 
         response = requests.get(url)
 
@@ -143,7 +125,3 @@ class FetchData:
 
             index += 1
         return lecture
-
-    def get_lecture_details(self) -> dict:
-
-        return self.lecture_details

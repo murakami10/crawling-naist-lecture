@@ -9,23 +9,8 @@ from tests.test_data import (lecture_test_data1, lecture_test_data2,
 TEST_LECTURE_TYPE = FetchData.LECTURE_TYPE_SPECIALIZED
 
 
-@pytest.fixture()
-def omd_connect_db():
-    """
-    テストに使用したdatabaseはdropする
-    :return:
-    """
-    omd = OperateMongoDB()
-
-    yield omd
-
-    omd.client.drop_database(omd.database_name)
-
-
-@pytest.fixture()
-def omd_select_collection(omd_connect_db, monkeypatch):
-    omd: OperateMongoDB = omd_connect_db
-
+# select_collection_from_typeをスタブする
+def set_attr_to_select_collection_from_lecture_type(monkeypatch):
     def dummy_func_select_collection_from_lecture_type(self, lecture_type):
         self.collection = self.database[lecture_type]
 
@@ -34,13 +19,35 @@ def omd_select_collection(omd_connect_db, monkeypatch):
         "select_collection_from_lecture_type",
         dummy_func_select_collection_from_lecture_type,
     )
-    omd.select_collection_from_lecture_type(TEST_LECTURE_TYPE)
 
+
+@pytest.fixture()
+def omd_connect_db(monkeypatch):
+    """
+    テストに使用したdatabaseはdropする
+    :return:
+    """
+    omd = OperateMongoDB(database_name="test")
+
+    yield omd
+
+    omd.client.drop_database("test")
+
+
+@pytest.fixture()
+def omd_select_collection(omd_connect_db, monkeypatch):
+    omd: OperateMongoDB = omd_connect_db
+
+    set_attr_to_select_collection_from_lecture_type(monkeypatch)
+    omd.select_collection_from_lecture_type(TEST_LECTURE_TYPE)
     return omd
 
 
 @pytest.fixture()
-def omd_data_is_set(omd_select_collection, monkeypatch):
+def omd_with_one_document(omd_select_collection, monkeypatch):
+    """
+    ドキュメント１つ追加したOperateMongoDBのinstanceを返す
+    """
     omd: OperateMongoDB = omd_select_collection
 
     def dummy_func_of_add_lecture_detail(self, lecture_details):
@@ -50,6 +57,23 @@ def omd_data_is_set(omd_select_collection, monkeypatch):
         OperateMongoDB, "add_lecture_detail", dummy_func_of_add_lecture_detail
     )
     omd.add_lecture_detail([lecture_test_data1])
+    return omd
+
+
+@pytest.fixture()
+def omd_with_two_document(omd_select_collection, monkeypatch):
+    """
+    ドキュメント１つ追加したOperateMongoDBのinstanceを返す
+    """
+    omd: OperateMongoDB = omd_select_collection
+
+    def dummy_func_of_add_lecture_detail(self, lecture_details):
+        self.collection.insert_many(lecture_details)
+
+    monkeypatch.setattr(
+        OperateMongoDB, "add_lecture_detail", dummy_func_of_add_lecture_detail
+    )
+    omd.add_lecture_detail([lecture_test_data1, lecture_test_data3])
     return omd
 
 
@@ -113,8 +137,8 @@ def test_add_lecture_detail_without_sellected_collection(
     assert "collection is not set" in caplog.messages
 
 
-def test_update_lecture_details(omd_data_is_set, monkeypatch, caplog):
-    omd: OperateMongoDB = omd_data_is_set
+def test_update_lecture_details_with_name(omd_with_one_document, monkeypatch, caplog):
+    omd: OperateMongoDB = omd_with_one_document
 
     # lecture_test_data1はすでにデータに登録されている
     omd.update_lecture_details_with_name([lecture_test_data2, lecture_test_data3])
@@ -127,14 +151,54 @@ def test_update_lecture_details(omd_data_is_set, monkeypatch, caplog):
     assert omd.collection.find_one({"name": lecture_test_data3["name"]}) is None
 
 
-def test_get_lecture_details(omd_data_is_set, caplog):
-    omd: OperateMongoDB = omd_data_is_set
+# add test to test_update_lecture_details_with_name lecture_test_dataがLectureDetailのインスタンスだった場合のテスト
 
-    details = omd.get_lecture_detail(lecture_test_data1["name"])
+
+def test_get_lecture_details(omd_with_one_document, caplog):
+    omd: OperateMongoDB = omd_with_one_document
+
+    details = omd.get_lecture_details(lecture_test_data1["name"])
 
     assert details == lecture_test_data1["details"]
 
     with pytest.raises(SystemExit):
-        omd.get_lecture_detail(lecture_test_data3["name"])
+        omd.get_lecture_details(lecture_test_data3["name"])
 
     assert lecture_test_data3["name"] + " is not existed in db" in caplog.messages
+
+
+def test_get_lecture(omd_with_one_document, monkeypatch):
+
+    omd: OperateMongoDB = omd_with_one_document
+
+    set_attr_to_select_collection_from_lecture_type(monkeypatch)
+
+    lecture = omd.get_lecture(TEST_LECTURE_TYPE, lecture_test_data1["name"])
+    assert lecture["name"] == lecture_test_data1["name"]
+    assert lecture["details"] == lecture_test_data1["details"]
+
+
+def test_get_all_lectures(omd_with_two_document, monkeypatch):
+    omd: OperateMongoDB = omd_with_two_document
+
+    set_attr_to_select_collection_from_lecture_type(monkeypatch)
+
+    lectures = omd.get_all_lectures(TEST_LECTURE_TYPE)
+    for lecture in lectures:
+        assert lecture["name"] in [
+            lecture_test_data1["name"],
+            lecture_test_data3["name"],
+        ]
+
+        assert lecture["details"] in [
+            lecture_test_data1["details"],
+            lecture_test_data3["details"],
+        ]
+
+
+def test_count_lecture(omd_with_one_document, monkeypatch):
+    omd: OperateMongoDB = omd_with_one_document
+
+    set_attr_to_select_collection_from_lecture_type(monkeypatch)
+
+    assert omd.count_lecture(TEST_LECTURE_TYPE) == 1
