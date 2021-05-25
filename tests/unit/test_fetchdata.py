@@ -24,19 +24,8 @@ def test_fetch_data():
             in fetch_data.name_and_url_of_lectures[FetchData.LECTURE_TYPE_SPECIALIZED]
         )
 
-    fetch_data.scrape_details(specialized_lectures)
+    details = fetch_data.get_one_lecture_details(specialized_lectures[0].url)
 
-    assert 1 == fetch_data.lecture_details[specialized_lectures[0].name][0].number
-    assert (
-        "4/22 [2]" == fetch_data.lecture_details[specialized_lectures[0].name][0].date
-    )
-    assert (
-        "スーパスカラとVLIW (日本語教科書８章)"
-        == fetch_data.lecture_details[specialized_lectures[0].name][0].theme
-    )
-
-    assert 1 == fetch_data.lecture_details[specialized_lectures[1].name][0].number
-    assert (
-        "4/26 [2]" == fetch_data.lecture_details[specialized_lectures[1].name][0].date
-    )
-    assert "概論" == fetch_data.lecture_details[specialized_lectures[1].name][0].theme
+    assert 1 == details[0].number
+    assert "4/22 [2]" == details[0].date
+    assert "スーパスカラとVLIW (日本語教科書８章)" == details[0].theme

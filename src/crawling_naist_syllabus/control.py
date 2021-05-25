@@ -35,7 +35,7 @@ def load_details_data(
     if "details" in lecture.keys() and not refetch:
         return lecture["details"]
 
-    details = fd.scrape_one_details(lecture["url"])
+    details = fd.get_one_lecture_details(lecture["url"])
     lecture_details = {
         "name": lecture_name,
         "details": details,

@@ -5,8 +5,7 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 import pytest
 import requests
 
-from src.crawling_naist_syllabus.fetch import (FetchData, LectureDetail,
-                                               LectureNameUrl)
+from src.crawling_naist_syllabus.fetch import FetchData, LectureDetail, LectureNameUrl
 
 
 @pytest.fixture(scope="session")
@@ -161,6 +160,31 @@ def test_scrape_lecture(monkeypatch):
     )
 
 
+def test_get_one_lecture(start_http_server_with_specific_directory, monkeypatch):
+    monkeypatch.setattr(FetchData, "__init__", dummy_init)
+    fetch_data = FetchData("url")
+
+    def dummy_scrape_detail_of_lecture(self, response):
+        details = [
+            LectureDetail(
+                number="1", date="5/20", theme="CPU", content="CPUの性能について議論する"
+            ),
+            LectureDetail(
+                number="2", date="5/27", theme="GPU", content="GPUの性能について議論する"
+            ),
+        ]
+        return details
+
+    monkeypatch.setattr(
+        FetchData, "scrape_detail_of_lecture", dummy_scrape_detail_of_lecture
+    )
+    detail_url = start_http_server_with_specific_directory + "/detail_1.html"
+    details = fetch_data.get_one_lecture_details(detail_url)
+    assert details[0] == LectureDetail(
+        number="1", date="5/20", theme="CPU", content="CPUの性能について議論する"
+    )
+
+
 def test_scrape_detail_of_lecture(
     start_http_server_with_specific_directory, monkeypatch
 ):
@@ -173,88 +197,3 @@ def test_scrape_detail_of_lecture(
     assert 1 == detail_lecture_data[0].number
     assert "4/22 [2]" == detail_lecture_data[0].date
     assert "スーパスカラとVLIW (日本語教科書８章)" == detail_lecture_data[0].theme
-
-
-def test_scrape_details(start_http_server_with_specific_directory, monkeypatch):
-
-    lecture_detail = LectureDetail(
-        number=1,
-        date="4/22 [2]",
-        theme="スーパスカラとVLIW (日本語教科書８章)",
-        content="高性能基盤の説明です",
-    )
-
-    monkeypatch.setattr(FetchData, "__init__", dummy_init)
-    fetch_data = FetchData("url")
-
-    monkeypatch.setattr(
-        FetchData,
-        "scrape_detail_of_lecture",
-        lambda self, response: [lecture_detail],
-    )
-    detail_url = start_http_server_with_specific_directory + "/detail_1.html"
-    lecture = LectureNameUrl(name="高性能計算基盤", url=detail_url)
-    fetch_data.scrape_details([lecture])
-
-    assert lecture_detail in fetch_data.lecture_details["高性能計算基盤"]
-
-
-@pytest.mark.parametrize(
-    "invalid_url",
-    [
-        "http://127.0.0.1:8888/not_existed_index.html",
-        "httpaaaa",
-    ],
-)
-def test_scrape_details_with_invalid_url(monkeypatch, invalid_url):
-
-    monkeypatch.setattr(FetchData, "__init__", dummy_init)
-    lecture = LectureNameUrl(name="高性能計算基盤", url=invalid_url)
-    fetch_data = FetchData("url")
-    with pytest.raises(Exception):
-        fetch_data.scrape_details([lecture])
-
-
-def test_scrape_details_with_not_lecture_name_url(
-    start_http_server_with_specific_directory, monkeypatch
-):
-    monkeypatch.setattr(FetchData, "__init__", dummy_init)
-    detail_url = start_http_server_with_specific_directory + "/detail_1.html"
-    not_instance_of_lecture_name_url = {"name": "高性能計算基盤", "url": detail_url}
-    fetch_data = FetchData("url")
-    fetch_data.scrape_details(not_instance_of_lecture_name_url)
-
-    assert fetch_data.lecture_details == {}
-
-
-def test_get_lecture_details(monkeypatch):
-
-    lecture_detail = LectureDetail(
-        number=1,
-        date="4/22 [2]",
-        theme="スーパスカラとVLIW (日本語教科書８章)",
-        content="高性能基盤の説明です",
-    )
-
-    def dummy_scrape_details(self, lectures):
-        self.lecture_details = {"高性能計算基盤": lecture_detail}
-
-    # FetchDataの__init__のスタブ
-    monkeypatch.setattr(FetchData, "__init__", dummy_init)
-    fetch_data = FetchData("dummy_url")
-
-    # scrape_detailsのスタブ
-    lecture = LectureNameUrl(name="高性能計算基盤", url="dummy_detail_url")
-    monkeypatch.setattr(FetchData, "scrape_details", dummy_scrape_details)
-    fetch_data.scrape_details([lecture])
-
-    assert fetch_data.get_lecture_details() == fetch_data.lecture_details
-
-
-def test_get_lecture_details_without_calling_scrape_details(monkeypatch):
-
-    monkeypatch.setattr(FetchData, "__init__", dummy_init)
-    fetch_data_without_lecture_details = FetchData("url")
-
-    with pytest.raises(AttributeError):
-        _ = fetch_data_without_lecture_details.get_lecture_details()
