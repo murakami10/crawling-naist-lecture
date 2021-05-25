@@ -28,7 +28,7 @@ class GUI:
 
     def display_lectures(self, lecture_types: dict):
 
-        checked_lecture_type = None
+        self.checked_lecture_type = None
 
         for lecture_type, checked in lecture_types.items():
 
@@ -36,17 +36,19 @@ class GUI:
                 continue
 
             if checked == True:
-                checked_lecture_type = lecture_type
+                self.checked_lecture_type = lecture_type
                 break
 
-        if checked_lecture_type is None:
+        if self.checked_lecture_type is None:
             logger.error("type is not checked")
             exit()
 
-        layout_lecture_type = self._get_lecture_type_layout(checked_lecture_type)
+        layout_lecture_type = self._get_lecture_type_layout(self.checked_lecture_type)
         layout_lecture_type.append([sg.Button("一覧を表示", key="start_display", font=(20))])
 
-        layout_lecture_column = self._get_lecture_column_layout(checked_lecture_type)
+        layout_lecture_column = self._get_lecture_column_layout(
+            self.checked_lecture_type
+        )
 
         layout = [
             [
@@ -69,14 +71,10 @@ class GUI:
     def display_details(self, lectures: dict, refetch=False):
 
         lecture_name = None
-        checked_lecture_type = None
 
         for lecture, checked in lectures.items():
 
             if lecture in FetchData.LECTURE_TYPES:
-
-                if checked:
-                    checked_lecture_type = lecture
                 continue
 
             if checked:
@@ -86,7 +84,7 @@ class GUI:
             if lecture == "detail_name":
                 lecture_name = checked
 
-        if checked_lecture_type is None:
+        if self.checked_lecture_type is None:
             logger.error("type is not checked")
             exit()
 
@@ -94,17 +92,17 @@ class GUI:
             logger.error("lecture is not checked")
             exit()
 
-        layout_lecture_type = self._get_lecture_type_layout(checked_lecture_type)
+        layout_lecture_type = self._get_lecture_type_layout(self.checked_lecture_type)
         layout_lecture_type.append(
             [sg.Button("一覧を表示", key="display_lecture", font=(20))]
         )
 
         layout_lecture_column = self._get_lecture_column_layout(
-            checked_lecture_type, lecture_name
+            self.checked_lecture_type, lecture_name
         )
 
         layout_lecture_details = self._get_lecture_details_layout(
-            checked_lecture_type, lecture_name, refetch
+            self.checked_lecture_type, lecture_name, refetch
         )
         layout_lecture_details.append(
             [sg.Button("授業の詳細を再取得する", font=(20), key="refetch_details")]
@@ -157,6 +155,9 @@ class GUI:
         self, checked_lecture_type, checked_lecture_name="not_checked"
     ):
         lectures = load_data(checked_lecture_type, self.omd, self.fd)
+        if checked_lecture_name == "not_checked":
+            checked_lecture_name = lectures[0]["name"]
+
         layout_lecture = []
         for lecture in lectures:
             layout_lecture.append(
