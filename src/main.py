@@ -2,25 +2,11 @@ import logging
 
 from crawling_naist_syllabus.gui import GUI
 
-logger = logging.getLogger()
+# logの出力設定
+formating = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+logging.basicConfig(format=formating)
+logging.getLogger("crawling_naist_syllabus").setLevel(level=logging.WARNING)
 
 if __name__ == "__main__":
     gui = GUI()
-    window = gui.start_display()
-
-    while True:
-        event, values = window.read()
-        logger.debug(event, values)
-        if event == None:
-            break
-        elif event == "display_lecture":
-            window.close()
-            window = gui.display_lectures(values)
-        elif event == "display_detail":
-            window.close()
-            window = gui.display_details(values)
-        elif event == "refetch_details":
-            window.close()
-            window = gui.display_details(values, True)
-
-    window.close()
+    gui.loop()

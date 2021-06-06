@@ -1,11 +1,13 @@
 import logging
 import os
+from typing import List
 
 import pymongo.collection
 from dotenv import load_dotenv
 from pymongo import MongoClient, common
 
-from .fetch import FetchData, LectureDetail
+from .fetch import FetchData
+from .structure import Lecture
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -45,14 +47,18 @@ class OperateMongoDB:
             )
             exit()
 
-    def add_lecture_detail(self, lecture_details: list):
-        if isinstance(self.collection, pymongo.collection.Collection):
-            self.collection.insert_many(lecture_details)
-        else:
+    def add_lecture(self, lecture_details: List[Lecture]):
+        """
+        授業の情報を追加する
+        """
+        if self.collection is None:
             logger.error("collection is not set")
             exit()
 
-    def update_lecture_details_with_name(self, lecture_details: list):
+        for lecture in lecture_details:
+            self.collection.insert_one(lecture.get_dict_name_url())
+
+    def update_lecture_details(self, lecture: Lecture):
         """
         lectureのdetailを更新する
         """
@@ -60,26 +66,14 @@ class OperateMongoDB:
             logger.error("collection is not set")
             exit()
 
-        for lecture_detail in lecture_details:
-            details = []
-            # lecture_details["details"]がLectureDetailのinstanceであれば辞書型に変える
-            for detail in lecture_detail["details"]:
-                if isinstance(detail, LectureDetail):
-                    detail_dict = detail._asdict()
-                elif isinstance(detail, dict):
-                    detail_dict = detail
-                else:
-                    logger.error("detail is not LectureDetail or dict")
-                    exit()
-                details.append(detail_dict)
-            update = self.collection.update_one(
-                filter={"name": lecture_detail["name"]},
-                update={"$set": {"details": details}},
-            )
-            if update is None:
-                logger.warning("Can't find " + lecture_detail["name"])
+        update = self.collection.update_one(
+            filter={"name": lecture.name},
+            update={"$set": {"details": lecture.details_to_list_of_dict()}},
+        )
+        if update is None:
+            logger.warning("Can't find " + lecture.name)
 
-    def get_lecture_details(self, lecture_name):
+    def load_lecture_details(self, lecture_name):
 
         lecture = self.collection.find_one({"name": lecture_name})
         if lecture is None:
@@ -87,21 +81,31 @@ class OperateMongoDB:
             exit()
         return lecture["details"]
 
-    def get_lecture(self, lecture_type, lecture_name):
+    def load_lecture(self, lecture_type, lecture_name) -> Lecture:
+        """
+        保存した情報から授業情報をロードする
+        """
 
         self.select_collection_from_lecture_type(lecture_type)
-        lecture = self.collection.find_one({"name": lecture_name})
-        if lecture is None:
-            logger.error(lecture_name + " is not existed in db")
-            exit()
+        lecture_name_url: dict = self.collection.find_one({"name": lecture_name})
+        if lecture_name_url is None:
+            logger.info("not find " + lecture_name)
+            return None
+
+        lecture: Lecture = Lecture(lecture_name_url["name"], lecture_name_url["url"])
+        if "details" in lecture_name_url.keys():
+            lecture.dict_to_lecturedetail(lecture_name_url["details"])
+
         return lecture
 
-    def get_all_lectures(self, lecture_type):
+    def load_lectures_with_lecture_type(self, lecture_type) -> (List[Lecture], int):
+        """
+        保存したデータから授業情報一覧をロードする
+        """
         self.select_collection_from_lecture_type(lecture_type)
-        lectures = self.collection.find()
-        return lectures
-
-    def count_lecture(self, lecture_type):
-        self.select_collection_from_lecture_type(lecture_type)
+        lectures = [
+            Lecture(lecture["name"], lecture["url"])
+            for lecture in self.collection.find()
+        ]
         count = self.collection.estimated_document_count()
-        return count
+        return lectures, count
