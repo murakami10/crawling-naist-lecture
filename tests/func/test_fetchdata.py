@@ -5,7 +5,8 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 import pytest
 import requests
 
-from src.crawling_naist_syllabus.fetch import FetchData, LectureDetail, LectureNameUrl
+from src.crawling_naist_syllabus.fetch import FetchData
+from src.crawling_naist_syllabus.structure import Lecture
 
 
 @pytest.fixture(scope="session")
@@ -98,19 +99,19 @@ def test_init_with_valid_url(start_http_server):
         pytest.fail("Exception raised")
 
 
-general_lecture = LectureNameUrl(
+general_lecture = Lecture(
     name="技術と倫理",
     url="http://127.0.0.1:8889/subjects/preview_detail/644",
 )
-introduction_lecture = LectureNameUrl(
+introduction_lecture = Lecture(
     name="情報理工学序論",
     url="http://127.0.0.1:8889/subjects/preview_detail/662",
 )
-basic_lecture = LectureNameUrl(
+basic_lecture = Lecture(
     name="情報科学基礎Ⅰ",
     url="http://127.0.0.1:8889/subjects/preview_detail/791",
 )
-specialized_lecture = LectureNameUrl(
+specialized_lecture = Lecture(
     name="ソフトウェア工学",
     url="http://127.0.0.1:8889/subjects/preview_detail/688",
 )
@@ -139,52 +140,6 @@ def dummy_init(self, url):
     pass
 
 
-def test_scrape_lecture(monkeypatch):
-    def dummy_scrape_name_and_url(self, lecture):
-        return [
-            LectureNameUrl(
-                name="例",
-                url="http://example.com",
-            )
-        ]
-
-    monkeypatch.setattr(FetchData, "__init__", dummy_init)
-    monkeypatch.setattr(FetchData, "scrape_name_and_url", dummy_scrape_name_and_url)
-    fetch_data = FetchData("url")
-
-    fetch_data.scrape_lectures([FetchData.LECTURE_TYPE_BASIC])
-
-    assert (
-        LectureNameUrl(name="例", url="http://example.com")
-        in fetch_data.name_and_url_of_lectures[FetchData.LECTURE_TYPE_BASIC]
-    )
-
-
-def test_get_one_lecture(start_http_server_with_specific_directory, monkeypatch):
-    monkeypatch.setattr(FetchData, "__init__", dummy_init)
-    fetch_data = FetchData("url")
-
-    def dummy_scrape_detail_of_lecture(self, response):
-        details = [
-            LectureDetail(
-                number="1", date="5/20", theme="CPU", content="CPUの性能について議論する"
-            ),
-            LectureDetail(
-                number="2", date="5/27", theme="GPU", content="GPUの性能について議論する"
-            ),
-        ]
-        return details
-
-    monkeypatch.setattr(
-        FetchData, "scrape_detail_of_lecture", dummy_scrape_detail_of_lecture
-    )
-    detail_url = start_http_server_with_specific_directory + "/detail_1.html"
-    details = fetch_data.get_one_lecture_details(detail_url)
-    assert details[0] == LectureDetail(
-        number="1", date="5/20", theme="CPU", content="CPUの性能について議論する"
-    )
-
-
 def test_scrape_detail_of_lecture(
     start_http_server_with_specific_directory, monkeypatch
 ):
@@ -192,8 +147,8 @@ def test_scrape_detail_of_lecture(
     monkeypatch.setattr(FetchData, "__init__", dummy_init)
     fetch_data = FetchData("url")
     detail_url = start_http_server_with_specific_directory + "/detail_1.html"
-    response: requests.Response = requests.get(detail_url)
-    detail_lecture_data = fetch_data.scrape_detail_of_lecture(response)
-    assert 1 == detail_lecture_data[0].number
-    assert "4/22 [2]" == detail_lecture_data[0].date
-    assert "スーパスカラとVLIW (日本語教科書８章)" == detail_lecture_data[0].theme
+    lecture = Lecture(name="高性能計算基盤", url=detail_url)
+    lecture = fetch_data.scrape_detail(lecture)
+    assert 1 == lecture.details[0].number
+    assert "4/22 [2]" == lecture.details[0].date
+    assert "スーパスカラとVLIW (日本語教科書８章)" == lecture.details[0].theme
