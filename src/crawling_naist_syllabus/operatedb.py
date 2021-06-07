@@ -73,14 +73,6 @@ class OperateMongoDB:
         if update is None:
             logger.warning("Can't find " + lecture.name)
 
-    def load_lecture_details(self, lecture_name):
-
-        lecture = self.collection.find_one({"name": lecture_name})
-        if lecture is None:
-            logger.error(lecture_name + " is not existed in db")
-            exit()
-        return lecture["details"]
-
     def load_lecture(self, lecture_type, lecture_name) -> Lecture:
         """
         保存した情報から授業情報をロードする
