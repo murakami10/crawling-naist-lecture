@@ -8,7 +8,7 @@ from .structure import LectureDetail
 logger = logging.getLogger(__name__)
 
 
-def load_data(lecture_type, omd: OperateMongoDB, fd: FetchData):
+def load_lectures(lecture_type, omd: OperateMongoDB, fd: FetchData):
     """
     授業データをDBから取り出す。データが無ければrequestを送り取得、保存する
     """

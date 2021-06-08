@@ -2,7 +2,7 @@ import logging
 
 import PySimpleGUI as sg
 
-from .control import load_data, load_details
+from .control import load_details, load_lectures
 from .fetch import FetchData, LectureDetail
 from .operatedb import OperateMongoDB
 
@@ -146,7 +146,7 @@ class GUI:
 
     def _create_lecture_column_layout(self, init=False):
 
-        lectures = load_data(self.checked_lecture_type, self.omd, self.fd)
+        lectures = load_lectures(self.checked_lecture_type, self.omd, self.fd)
 
         if init:
             self.checked_lecture_name = lectures[0].name
