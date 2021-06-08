@@ -1,4 +1,4 @@
-name: Docker-Compose Action Workflow
+name: CI
 
 on:
   push:
