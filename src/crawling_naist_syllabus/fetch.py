@@ -1,20 +1,10 @@
 import re
-from typing import NamedTuple
+from typing import List
 
 import lxml.html
 import requests
 
-
-class LectureNameUrl(NamedTuple):
-    name: str
-    url: str
-
-
-class LectureDetail(NamedTuple):
-    number: int
-    date: str
-    theme: str
-    content: str
+from .structure import Lecture, LectureDetail
 
 
 class FetchData:
@@ -52,24 +42,16 @@ class FetchData:
         self.root = lxml.html.fromstring(self.response.content)
         self.root.make_links_absolute(self.response.url)
 
-    def scrape_lectures(self, lectures: list):
-
-        self.name_and_url_of_lectures = {}
-
-        for lecture in lectures:
-
-            self.name_and_url_of_lectures[lecture] = self.scrape_name_and_url(lecture)
-
-    def scrape_name_and_url(self, lecture):
+    def scrape_name_and_url(self, lecture_type) -> List[Lecture]:
         """
         授業科目の名前とURLを取得
         """
 
-        lecture_datas = []
+        lectures: List[Lecture] = []
 
         # start_index_of_lectureにないkeyを指定すると例外を投げる
         # 例外に気づくためにcatchしない
-        index = self.START_INDEX_OF_LECTURE[lecture]
+        index = self.START_INDEX_OF_LECTURE[lecture_type]
 
         while value := self.root.cssselect(
             f"#contents > table  > tr:nth-child({index}) > td.w20pr"
@@ -82,28 +64,23 @@ class FetchData:
             else:
                 url = url.get("href")
 
-            lecture_datas.append(LectureNameUrl(name=value[0].text_content(), url=url))
+            lectures.append(Lecture(value[0].text_content(), url))
             index += 1
 
-        return lecture_datas
+        return lectures
 
-    def get_one_lecture_details(self, url):
-
-        response = requests.get(url)
-
-        # 無効なurlの際に例外を投げる
-        response.raise_for_status()
-
-        return self.scrape_detail_of_lecture(response)
-
-    def scrape_detail_of_lecture(self, response: requests.Response):
+    def scrape_detail(self, lecture: Lecture) -> Lecture:
         """
         授業の詳細な情報を取得
         """
 
+        response = requests.get(lecture.url)
+        # 無効なurlの際に例外を投げる
+        response.raise_for_status()
+
         root = lxml.html.fromstring(response.content)
 
-        lecture = []
+        lecture_details = []
         index = 2
 
         while element := root.cssselect(
@@ -114,7 +91,7 @@ class FetchData:
             # 空白文字(\n\t\r\f\v)を空白に変更する関数
             normalize_spaces = lambda text: re.sub(r"\s+", " ", text).strip()
 
-            lecture.append(
+            lecture_details.append(
                 LectureDetail(
                     number=int(td_element[0].text_content()),
                     date=td_element[1].text_content(),
@@ -124,4 +101,6 @@ class FetchData:
             )
 
             index += 1
+
+        lecture.details = lecture_details
         return lecture

@@ -50,13 +50,11 @@ def omd_with_one_document(omd_select_collection, monkeypatch):
     """
     omd: OperateMongoDB = omd_select_collection
 
-    def dummy_func_of_add_lecture_detail(self, lecture_details):
+    def dummy_func_of_add_lecture(self, lecture_details):
         self.collection.insert_many(lecture_details)
 
-    monkeypatch.setattr(
-        OperateMongoDB, "add_lecture_detail", dummy_func_of_add_lecture_detail
-    )
-    omd.add_lecture_detail([lecture_test_data1])
+    monkeypatch.setattr(OperateMongoDB, "add_lecture", dummy_func_of_add_lecture)
+    omd.add_lecture([lecture_test_data1.get_dict_name_url()])
     return omd
 
 
@@ -70,10 +68,10 @@ def omd_with_two_document(omd_select_collection, monkeypatch):
     def dummy_func_of_add_lecture_detail(self, lecture_details):
         self.collection.insert_many(lecture_details)
 
-    monkeypatch.setattr(
-        OperateMongoDB, "add_lecture_detail", dummy_func_of_add_lecture_detail
+    monkeypatch.setattr(OperateMongoDB, "add_lecture", dummy_func_of_add_lecture_detail)
+    omd.add_lecture(
+        [lecture_test_data1.get_dict_name_url(), lecture_test_data3.get_dict_name_url()]
     )
-    omd.add_lecture_detail([lecture_test_data1, lecture_test_data3])
     return omd
 
 
@@ -103,21 +101,21 @@ def test_select_database_from_not_lecture_type(omd_connect_db, caplog):
     )
 
 
-def test_add_lecture_detail(omd_select_collection):
+def test_add_lecture(omd_select_collection):
     """
     講義の情報を追加する
     """
     omd: OperateMongoDB = omd_select_collection
 
-    omd.add_lecture_detail([lecture_test_data1])
+    omd.add_lecture([lecture_test_data1])
 
-    assert (
-        omd.collection.find_one({"name": lecture_test_data1["name"]})["details"]
-        == lecture_test_data1["details"]
-    )
+    lecture_from_db = omd.collection.find_one({"name": lecture_test_data1.name})
+
+    assert lecture_from_db["name"] == lecture_test_data1.name
+    assert lecture_from_db["url"] == lecture_test_data1.url
 
 
-def test_add_lecture_detail_without_sellected_collection(
+def test_add_lecture_without_sellected_collection(
     omd_select_collection, monkeypatch, caplog
 ):
     """
@@ -133,72 +131,59 @@ def test_add_lecture_detail_without_sellected_collection(
     }
 
     with pytest.raises(SystemExit):
-        omd.add_lecture_detail([lecture])
+        omd.add_lecture([lecture])
     assert "collection is not set" in caplog.messages
 
 
-def test_update_lecture_details_with_name(omd_with_one_document, monkeypatch, caplog):
+def test_update_lecture_details(omd_with_one_document, monkeypatch):
     omd: OperateMongoDB = omd_with_one_document
 
-    # lecture_test_data1はすでにデータに登録されている
-    omd.update_lecture_details_with_name([lecture_test_data2, lecture_test_data3])
+    omd.update_lecture_details(lecture_test_data2)
 
-    assert (
-        omd.collection.find_one({"name": lecture_test_data2["name"]})["details"]
-        == lecture_test_data2["details"]
-    )
+    details = omd.collection.find_one({"name": lecture_test_data2.name})["details"]
 
-    assert omd.collection.find_one({"name": lecture_test_data3["name"]}) is None
-
-
-# add test to test_update_lecture_details_with_name lecture_test_dataがLectureDetailのインスタンスだった場合のテスト
+    for detail, test_data in zip(details, lecture_test_data2.details):
+        assert detail["number"] == test_data.number
+        assert detail["date"] == test_data.date
+        assert detail["theme"] == test_data.theme
+        assert detail["content"] == test_data.content
 
 
-def test_get_lecture_details(omd_with_one_document, caplog):
-    omd: OperateMongoDB = omd_with_one_document
-
-    details = omd.get_lecture_details(lecture_test_data1["name"])
-
-    assert details == lecture_test_data1["details"]
-
-    with pytest.raises(SystemExit):
-        omd.get_lecture_details(lecture_test_data3["name"])
-
-    assert lecture_test_data3["name"] + " is not existed in db" in caplog.messages
-
-
-def test_get_lecture(omd_with_one_document, monkeypatch):
+def test_load_lecture(omd_with_one_document, monkeypatch):
 
     omd: OperateMongoDB = omd_with_one_document
-
     set_attr_to_select_collection_from_lecture_type(monkeypatch)
 
-    lecture = omd.get_lecture(TEST_LECTURE_TYPE, lecture_test_data1["name"])
-    assert lecture["name"] == lecture_test_data1["name"]
-    assert lecture["details"] == lecture_test_data1["details"]
+    # dbのdetailsにlecture_test_data2のdetails情報を追加
+    omd.update_lecture_details(lecture_test_data2)
+
+    lecture = omd.load_lecture(TEST_LECTURE_TYPE, lecture_test_data1.name)
+
+    assert lecture == lecture_test_data2
 
 
-def test_get_all_lectures(omd_with_two_document, monkeypatch):
+def test_load_lecture_without_lecture(omd_with_one_document, monkeypatch):
+    """
+    登録されている授業なしでloadする
+    """
+
+    omd: OperateMongoDB = omd_with_one_document
+    set_attr_to_select_collection_from_lecture_type(monkeypatch)
+
+    lecture = omd.load_lecture(TEST_LECTURE_TYPE, lecture_test_data3.name)
+    assert lecture == None
+
+
+def test_load_all_lectures(omd_with_two_document, monkeypatch):
     omd: OperateMongoDB = omd_with_two_document
 
     set_attr_to_select_collection_from_lecture_type(monkeypatch)
 
-    lectures = omd.get_all_lectures(TEST_LECTURE_TYPE)
+    lectures, count = omd.load_lectures_with_lecture_type(TEST_LECTURE_TYPE)
     for lecture in lectures:
-        assert lecture["name"] in [
-            lecture_test_data1["name"],
-            lecture_test_data3["name"],
+        assert lecture.name in [
+            lecture_test_data1.name,
+            lecture_test_data3.name,
         ]
 
-        assert lecture["details"] in [
-            lecture_test_data1["details"],
-            lecture_test_data3["details"],
-        ]
-
-
-def test_count_lecture(omd_with_one_document, monkeypatch):
-    omd: OperateMongoDB = omd_with_one_document
-
-    set_attr_to_select_collection_from_lecture_type(monkeypatch)
-
-    assert omd.count_lecture(TEST_LECTURE_TYPE) == 1
+    assert count == 2
