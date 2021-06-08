@@ -11,3 +11,5 @@ ps:
 	docker-compose ps
 app:
 	docker-compose exec app bash
+run:
+	python src/main.py
